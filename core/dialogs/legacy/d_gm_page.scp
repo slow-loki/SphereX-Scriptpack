@@ -4,137 +4,6 @@
 //****************************************************************************
 VERSION=X1
 
-
-[FUNCTION HelpPage]
-// This function is called when client press "Help" button on paperdoll
-SDIALOG d_helppage
-
-
-[DIALOG d_helppage]
-50,25
-
-resizepic 0 0 2600 540 345
-dhtmlgump 90 25 360 20 0 0 <DEF.CENTER><DEF.U>Ultima Online Help Menu<DEF.UE><DEF.CENTERE>
-button 400 308 2073 2072 1 0 0
-
-button 30 50 5540 5541 1 0 1
-dhtmlgump 60 50 450 60 1 1 <DEF.U>General question about Ultima Online<DEF.UE>: Select this option if you are having difficulties learning to use a skill, if you have a general gameplay question, or you would like to search the UO Knowledge Base.
-
-button 30 115 5540 5541 1 0 2
-dhtmlgump 60 115 450 60 1 1 <DEF.U>My character is physically stuck<DEF.UE>: This choice only covers cases where your character is physically stuck in a location they cannot move out of.
-
-button 30 180 5540 5541 1 0 3
-dhtmlgump 60 180 450 60 1 1 <DEF.U>Other<DEF.UE>: If you are experiencing a problem in the game that does not fall into one of the other categories or is not addressed on the Support web page (located at <DEF.A>href="<SERV.URL>"><SERV.URL><DEF.AE>) and requires in-game assistance please use this option.
-
-button 30 245 5540 5541 1 0 4
-dhtmlgump 60 245 450 60 1 1 <DEF.U>Cancel pending request<DEF.UE>: Remove my pending help request from the queue.
-
-[DIALOG d_helppage BUTTON]
-ON=0
-SYSMESSAGE @035 Help request aborted.
-
-ON=1
-WEBLINK www.uo.com/wiki/ultima-online-wiki/
-
-ON=2
-REF1=<FINDID.i_memory_helppage_stuck>
-IF (<REF1>)
- SYSMESSAGE You choose not to go to any city.
- REF1.REMOVE
-ELSE
- SYSMESSAGE Please choose your destination.
- CAN |= mt_nonmover
- SDIALOG d_helppage_stuck
-ENDIF
-
-ON=3
-SDIALOG d_gmpage_prompt
-
-ON=4
-SYSMESSAGE @035 Removed help request.
-IF (<SERV.GMPAGES>)
- FOR 0 <eval <SERV.GMPAGES>-1>
-  IF !STRCMP("<SERV.GMPAGE.<LOCAL._FOR>.ACCOUNT>","<ACCOUNT>")
-   GMPageDelete <LOCAL._FOR>
-   return 1
-  ENDIF
- ENDFOR
-ENDIF
-
-
-[DIALOG d_helppage_stuck]
-150,50
-nomove
-noclose
-nodispose
-
-resizepic 0 0 2600 270 320
-dhtmlgump 50 20 250 35 0 0 Choose a town:
-FOR 1 6
- ARGS=<DEF.HelpPage.Teleport.<dLOCAL._FOR>>
- button 50 <eval 20+(<LOCAL._FOR>*35)> 208 209 1 0 <LOCAL._FOR>
- dhtmlgump 75 <eval 20+(<LOCAL._FOR>*35)> 145 20 0 0 <SERV.MAP(<dARGV[0]>,<dARGV[1]>,<dARGV[3]>).REGION.NAME>
-ENDFOR
-button 55 263 4005 4007 1 0 0
-dhtmlgump 90 265 200 20 0 0 CANCEL
-
-[DIALOG d_helppage_stuck BUTTON]
-ON=0
-SYSMESSAGE You choose not to go to any city.
-CAN &= ~mt_nonmover
-
-ON=1 6
-IF (<HOUSEDESIGN>) || (<STONE>) || (<ACCOUNT.JAIL>)
- CAN &= ~mt_nonmover
- return 1
-ENDIF
-SYSMESSAGE You will be teleported within the next two minutes.
-SERV.NEWITEM i_memory_helppage_stuck
-NEW.MOREP=<DEF.HelpPage.Teleport.<ARGN>>
-NEW.TIMER=<eval 10+<R110>>
-NEW.EQUIP
-
-[DEFNAME HelpPageTeleports]
-HelpPage.Teleport.1	1519,1619,10	//Britain
-HelpPage.Teleport.2	1993,2827	//Trinsic
-HelpPage.Teleport.3	2910,727	//Vesper
-HelpPage.Teleport.4	2433,541	//Minoc
-HelpPage.Teleport.5	536,979		//Yew
-HelpPage.Teleport.6	2247,1194	//Cove
-
-[ITEMDEF i_memory_helppage_stuck]
-ID=i_memory
-NAME=HelpPage stuck teleport
-TYPE=t_eq_script
-ON=@Equip
- SRC.CAN |= mt_nonmover
-ON=@Unequip
- SRC.CAN &= ~mt_nonmover
-ON=@Timer
- CONT.GO <MOREP>
- REMOVE
- return 1
-
-
-[DIALOG d_gmpage_prompt]
-50,50
-
-resizepic 0 0 2600 540 350
-dhtmlgump 214 30 150 20 0 0 Enter Description
-dhtmlgump 70 58 400 40 0 0 Please enter a brief description (up to 240 characters) of your problem:
-resizepic 50 98 3500 440 200
-dtextentrylimited 70 118 400 200 0 0 240
-button 125 305 2076 2075 1 0 1
-button 355 305 2073 2072 1 0 0
-
-[DIALOG d_gmpage_prompt BUTTON]
-ON=0
-SYSMESSAGE @035 Help request aborted.
-
-ON=1
-GMPAGE ADD <ARGTXT[0]>
-
-
 [FUNCTION Page]
 SDIALOG d_gmpage_queue
 
@@ -220,12 +89,12 @@ SRC.CTAG.Dialog.GMPage.Selected=
 
 ON=1
 SRC.GO <P>
-SRC.CTAG.Dialog.GMPage.Response="<ARGTXT[0]>"
+SRC.CTAG.Dialog.GMPage.Response=""<ARGTXT[0]>""
 SDIALOG d_gmpage_info
 
 ON=2
 SRC.GO <SERV.GMPAGE.<SRC.CTAG0.Dialog.GMPage.Selected>.P>
-SRC.CTAG.Dialog.GMPage.Response="<ARGTXT[0]>"
+SRC.CTAG.Dialog.GMPage.Response=""<ARGTXT[0]>""
 SDIALOG d_gmpage_info
 
 ON=3
@@ -237,13 +106,13 @@ ELIF (<SRC.GMPAGEP>)
 ELIF !(<REF1>)
  SERV.GMPAGE.<SRC.CTAG0.Dialog.GMPage.Selected>.HANDLED <SRC>
 ENDIF
-SRC.CTAG.Dialog.GMPage.Response="<ARGTXT[0]>"
+SRC.CTAG.Dialog.GMPage.Response=""<ARGTXT[0]>""
 SDIALOG d_gmpage_info
 
 ON=4
 REF1=<SERV.GMPAGE.<SRC.CTAG0.Dialog.GMPage.Selected>.HANDLED>
 IF (<REF1>) && (<REF1> != <SRC>)
- SRC.CTAG.Dialog.GMPage.Response="<ARGTXT[0]>"
+ SRC.CTAG.Dialog.GMPage.Response=""<ARGTXT[0]>""
  SDIALOG d_gmpage_info
  return 1
 ENDIF
@@ -253,11 +122,11 @@ SRC.SDIALOG d_gmpage_queue
 ON=5
 REF1=<SERV.GMPAGE.<SRC.CTAG0.Dialog.GMPage.Selected>.HANDLED>
 IF (<REF1>) && (<REF1> != <SRC>)
- SRC.CTAG.Dialog.GMPage.Response="<ARGTXT[0]>"
+ SRC.CTAG.Dialog.GMPage.Response=""<ARGTXT[0]>""
  SDIALOG d_gmpage_info
  return 1
 ENDIF
-ACCOUNT.TAG.GMPage.Response="<ARGTXT[0]>"
+ACCOUNT.TAG.GMPage.Response=""<ARGTXT[0]>""
 IF (<ISONLINE>)
  TRYSRC <UID> DIALOGCLOSE d_gmpage_response
  TRYSRC <UID> SDIALOG d_gmpage_response
@@ -309,5 +178,6 @@ button 475 417 2073 2072 0 1 0
 [DIALOG d_gmpage_response BUTTON]
 ON=1
 ACCOUNT.TAG.GMPage.Response=
+
 
 [EOF]
